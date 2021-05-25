@@ -22,7 +22,6 @@ class Agent(object):
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4, epsilon=1e-6)
         self.loss_metric = tf.keras.metrics.Mean(name="loss")
         self.q_metric = tf.keras.metrics.Mean(name="Q_value")
-        self.eps = 0.3
 
         # Buffer (Memory)
         self.buffer = ReplayBuffer(buffer_size=self.config.buffer_size, odim=self.odim, adim=self.adim, batch_size=self.config.mini_batch_size)
@@ -41,7 +40,7 @@ class Agent(object):
             o1_q = self.target_network(tf.constant(value=o1_batch))
             max_o1_q = tf.reduce_max(o1_q, axis=1)
             expected_q = r_batch + self.gamma * max_o1_q * (1-tf.constant(d_batch.astype('float32')))
-            main_q = tf.reduce_sum(self.main_network(o_batch) )
+            main_q = tf.reduce_sum(self.main_network(o_batch), axis=1)
             loss = tf.keras.losses.mse(tf.stop_gradient(expected_q), main_q)
 
         gradients = tape.gradient(loss, self.main_network.trainable_weights)
@@ -69,6 +68,8 @@ class Agent(object):
                 # Q = self.getQ(o.reshape(1, -1))
                 Q = self.getQ(tf.constant(value=o.reshape(1, -1)))
                 a = Q.numpy()[0]
+                if tf.random.uniform((), minval=0, maxval=1) < self.config.eps:
+                    a = self.env.action_space.sample()
                 o1, r, d, _ = self.env.step(a)
                 ep_len += 1
                 ep_ret += r

@@ -30,6 +30,7 @@ class ReplayBuffer:
             if type(minibatch[a][0]) == np.ndarray:
                 b.append(np.concatenate(minibatch[a]).reshape(size, -1))
             else:
-                b.append(minibatch[a].reshape(size, -1))
+                # b.append(minibatch[a].reshape(size, -1))
+                b.append(minibatch[a])
 
         return b[0], b[1], b[2], b[3], b[4]

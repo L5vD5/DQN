@@ -43,11 +43,10 @@ class DQNAgent():
         return self._Qpred
 
     def update(self, x_stack, y_stack):
-        self.model = self.mlp(config.hdims)
-        self._Qpred = self.model(x)
         self._loss = lambda: tf.keras.losses.mse(y_stack, self.Qpred)
         opt = tf.keras.optimizers.Adam(learning_rate=self.config.lr)
         self._train = opt.minimize(loss=self._loss, var_list=self.model.trainable_variables)
+        return self._train
 
 def get_envs():
     env_name = 'AntBulletEnv-v0'
@@ -60,34 +59,13 @@ def get_envs():
         time.sleep(0.01)
     return env,eval_env
 
-def simple_replay_train(DQN, train_batch):
-    dis = 0.99
-
-    x_stack = np.empty(0).reshape(0, DQN.odim)
-    y_stack = np.empty(0).reshape(0, DQN.adim)
-
-    for state, action, reward, next_state, done in train_batch:
-        Q=DQN.predict(state)
-
-        if done:
-            Q[0, action] = reward
-        else:
-            Q[0, action] = reward + dis * np.max(DQN.predict(next_state))
-
-        y_stack = np.vstack([y_stack, Q])
-        x_stack = np.vstack([x_stack, state])
-
-    return DQN.update(x_stack, y_stack)
-
-env, eval_env = get_envs()
-
-config = Config()
-odim = env.observation_space.shape[0]
-adim = env.action_space.shape[0]
-replay_buffer = deque()
-
 def main():
     start_time = time.time()
+    config = Config()
+    env, eval_env = get_envs()
+    odim = env.observation_space.shape[0]
+    adim = env.action_space.shape[0]
+
     mainDQN = DQNAgent(odim, adim, name='main')
     targetDQN = DQNAgent(odim, adim, name='target')
 

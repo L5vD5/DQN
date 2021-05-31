@@ -8,6 +8,10 @@ class ReplayBuffer:
     def __init__(self, buffer_size, odim, adim, batch_size=32):
         self.buffer_size = buffer_size
         self.buffer = deque(maxlen=self.buffer_size)
+        # self.buffer = deque(maxlen=self.buffer_size)
+        # self.buffer = deque(maxlen=self.buffer_size)
+        # self.buffer = deque(maxlen=self.buffer_size)
+        # self.buffer = deque(maxlen=self.buffer_size)
         self.batch_size = batch_size
         self.odim = odim
         self.adim = adim
@@ -18,13 +22,13 @@ class ReplayBuffer:
 
     def sample(self):
         size = self.batch_size if len(self.buffer) > self.batch_size else len(self.buffer)
-        minibatch = np.transpose(random.sample(self.buffer, size))
+        minibatch = np.transpose(np.array(random.sample(self.buffer, size),dtype='object'))
 
         # a = tf.constant(value=[minibatch[0][0]])
         b = []
         for a in range(5):
             if type(minibatch[a][0]) == np.ndarray:
-                b.append(np.concatenate(minibatch[a]).reshape(size, -1))
+                b.append(np.concatenate(minibatch[a]).reshape(size, *self.odim))
             else:
                 # b.append(minibatch[a].reshape(size, -1))
                 b.append(minibatch[a])
